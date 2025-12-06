@@ -1,93 +1,251 @@
-// Получаем ID для редактирования
-const editId = parseInt(localStorage.getItem('editId'));
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Редактировать товар</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .form-container {
+            max-width: 500px;
+            margin: 30px auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        
+        textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .btn-save {
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        .btn-delete {
+            background-color: #f44336;
+            color: white;
+        }
+        
+        .btn-cancel {
+            background-color: #ff9800;
+            color: white;
+        }
+        
+        .btn-back {
+            background-color: #2196F3;
+            color: white;
+        }
+        
+        .image-preview {
+            margin-top: 10px;
+        }
+        
+        .image-preview img {
+            max-width: 200px;
+            max-height: 150px;
+            border-radius: 4px;
+        }
+        
+        .product-id {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h1>✏️ Редактировать товар</h1>
+        <div class="product-id" id="productIdDisplay">ID товара: </div>
+        
+        <form id="editProductForm">
+            <input type="hidden" id="productId">
+            
+            <div class="form-group">
+                <label for="name">Название товара:</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="price">Цена (руб.):</label>
+                <input type="number" id="price" name="price" min="0" step="0.01" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="description">Описание:</label>
+                <textarea id="description" name="description" required></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="image">URL изображения:</label>
+                <input type="url" id="image" name="image" placeholder="https://example.com/image.jpg">
+                <div class="image-preview">
+                    <img id="imagePreview" src="" alt="Предпросмотр" style="display: none;">
+                </div>
+            </div>
+            
+            <div class="button-group">
+                <button type="submit" class="btn-save">💾 Сохранить изменения</button>
+                <button type="button" class="btn-delete" onclick="deleteProduct()">🗑️ Удалить товар</button>
+                <button type="button" class="btn-cancel" onclick="cancelEdit()">↩️ Отмена</button>
+            </div>
+        </form>
+        
+        <div style="margin-top: 20px;">
+            <button class="btn-back" onclick="goBack()">← Вернуться в каталог</button>
+        </div>
+    </div>
 
-// Загружаем товар при загрузке страницы
-window.addEventListener('DOMContentLoaded', function() {
-    if (!editId) {
-        alert('Товар не выбран');
-        window.location.href = 'index.html';
-        return;
-    }
-    
-    // Загружаем товары
-    const products = JSON.parse(localStorage.getItem('products')) || [];
-    
-    // Ищем товар
-    const product = products.find(p => p.id === editId);
-    
-    if (!product) {
-        alert('Товар не найден. ID: ' + editId);
-        window.location.href = 'index.html';
-        return;
-    }
-    
-    // Заполняем форму
-    document.getElementById('productId').value = product.id;
-    document.getElementById('name').value = product.name || '';
-    document.getElementById('price').value = product.price || '';
-    document.getElementById('description').value = product.description || '';
-    document.getElementById('image').value = product.image || '';
-    
-    // Превью изображения
-    const imagePreview = document.getElementById('imagePreview');
-    if (product.image && product.image !== 'https://via.placeholder.com/200x150?text=No+Image') {
-        imagePreview.src = product.image;
-        imagePreview.style.display = 'block';
-    }
-});
-
-// Обработка отправки формы
-document.getElementById('editProductForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const productId = parseInt(document.getElementById('productId').value);
-    let products = JSON.parse(localStorage.getItem('products')) || [];
-    
-    // Находим индекс
-    const index = products.findIndex(p => p.id === productId);
-    
-    if (index === -1) {
-        alert('Товар не найден');
-        return;
-    }
-    
-    // Обновляем товар
-    products[index] = {
-        id: productId,
-        name: document.getElementById('name').value.trim(),
-        price: parseFloat(document.getElementById('price').value),
-        description: document.getElementById('description').value.trim(),
-        image: document.getElementById('image').value.trim() || 'https://via.placeholder.com/200x150?text=No+Image'
-    };
-    
-    // Сохраняем
-    localStorage.setItem('products', JSON.stringify(products));
-    
-    alert('Товар успешно обновлен!');
-    window.location.href = 'index.html';
-});
-
-// Удаление товара
-function deleteProduct() {
-    if (!confirm('Удалить этот товар?')) {
-        return;
-    }
-    
-    const productId = parseInt(document.getElementById('productId').value);
-    let products = JSON.parse(localStorage.getItem('products')) || [];
-    
-    products = products.filter(p => p.id !== productId);
-    localStorage.setItem('products', JSON.stringify(products));
-    
-    alert('Товар удален!');
-    window.location.href = 'index.html';
-}
-
-// Превью изображения
-document.getElementById('image').addEventListener('input', function(e) {
-    const imagePreview = document.getElementById('imagePreview');
-    if (e.target.value.trim()) {
-        imagePreview.src = e.target.value;
-        imagePreview.style.display = 'block';
-    }
-});
+    <script>
+        // Получаем ID для редактирования
+        const editId = parseInt(localStorage.getItem('editId'));
+        
+        // Загружаем товар при загрузке страницы
+        window.addEventListener('DOMContentLoaded', function() {
+            if (!editId || isNaN(editId)) {
+                alert('❌ Товар не выбран для редактирования');
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            // Загружаем товары
+            const products = JSON.parse(localStorage.getItem('products')) || [];
+            
+            // Ищем товар
+            const product = products.find(p => p.id === editId);
+            
+            if (!product) {
+                alert('❌ Товар не найден. ID: ' + editId);
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            // Показываем ID товара
+            document.getElementById('productIdDisplay').textContent = 'ID товара: ' + product.id;
+            
+            // Заполняем форму
+            document.getElementById('productId').value = product.id;
+            document.getElementById('name').value = product.name || '';
+            document.getElementById('price').value = product.price || '';
+            document.getElementById('description').value = product.description || '';
+            document.getElementById('image').value = product.image || '';
+            
+            // Превью изображения
+            const imagePreview = document.getElementById('imagePreview');
+            if (product.image && product.image !== 'https://via.placeholder.com/200x150?text=No+Image') {
+                imagePreview.src = product.image;
+                imagePreview.style.display = 'block';
+            }
+            
+            // Фокус на первое поле
+            document.getElementById('name').focus();
+        });
+        
+        // Превью изображения при вводе URL
+        document.getElementById('image').addEventListener('input', function(e) {
+            const imagePreview = document.getElementById('imagePreview');
+            if (e.target.value.trim()) {
+                imagePreview.src = e.target.value;
+                imagePreview.style.display = 'block';
+            } else {
+                imagePreview.style.display = 'none';
+            }
+        });
+        
+        // Обработка отправки формы
+        document.getElementById('editProductForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const productId = parseInt(document.getElementById('productId').value);
+            let products = JSON.parse(localStorage.getItem('products')) || [];
+            
+            // Находим индекс
+            const index = products.findIndex(p => p.id === productId);
+            
+            if (index === -1) {
+                alert('❌ Товар не найден');
+                return;
+            }
+            
+            // Обновляем товар
+            products[index] = {
+                id: productId,
+                name: document.getElementById('name').value.trim(),
+                price: parseFloat(document.getElementById('price').value),
+                description: document.getElementById('description').value.trim(),
+                image: document.getElementById('image').value.trim() || 'https://via.placeholder.com/200x150?text=No+Image'
+            };
+            
+            // Сохраняем
+            localStorage.setItem('products', JSON.stringify(products));
+            
+            alert('✅ Товар успешно обновлен!');
+            window.location.href = 'index.html';
+        });
+        
+        // Удаление товара
+        function deleteProduct() {
+            if (!confirm('❓ Вы уверены, что хотите удалить этот товар?')) {
+                return;
+            }
+            
+            const productId = parseInt(document.getElementById('productId').value);
+            let products = JSON.parse(localStorage.getItem('products')) || [];
+            
+            products = products.filter(p => p.id !== productId);
+            localStorage.setItem('products', JSON.stringify(products));
+            
+            alert('✅ Товар удален!');
+            window.location.href = 'index.html';
+        }
+        
+        // Отмена редактирования
+        function cancelEdit() {
+            if (confirm('❓ Отменить редактирование?')) {
+                window.location.href = 'index.html';
+            }
+        }
+        
+        // Возврат в каталог
+        function goBack() {
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>
