@@ -1,96 +1,57 @@
-// Получаем ID товара для редактирования
-const editId = localStorage.getItem('editId');
+// Получаем ID для редактирования
+const editId = parseInt(localStorage.getItem('editId'));
 
-if (!editId) {
-    alert('Товар не выбран для редактирования');
-    window.location.href = 'index.html';
-}
-
-// Загружаем товары
-async function getProducts() {
-    try {
-        const localProducts = localStorage.getItem('products');
-        
-        if (localProducts) {
-            return JSON.parse(localProducts);
-        } else {
-            // Если нет в localStorage, загружаем из JSON
-            const response = await fetch('products.json');
-            return await response.json();
-        }
-    } catch (error) {
-        console.error('Ошибка загрузки товаров:', error);
-        return [];
-    }
-}
-
-// Сохраняем товары
-async function saveProducts(products) {
-    localStorage.setItem('products', JSON.stringify(products));
-}
-
-// Загружаем данные товара для редактирования
-async function loadProductData() {
-    const products = await getProducts();
-    
-    // Преобразуем editId в число для сравнения
-    const productId = parseInt(editId);
-    const product = products.find(p => p.id === productId);
-    
-    console.log('Ищем товар с ID:', productId);
-    console.log('Все товары:', products);
-    
-    if (!product) {
-        alert('Товар не найден. ID: ' + productId);
+// Загружаем товар при загрузке страницы
+window.addEventListener('DOMContentLoaded', function() {
+    if (!editId) {
+        alert('Товар не выбран');
         window.location.href = 'index.html';
         return;
     }
     
-    // Заполняем форму данными товара
+    // Загружаем товары
+    const products = JSON.parse(localStorage.getItem('products')) || [];
+    
+    // Ищем товар
+    const product = products.find(p => p.id === editId);
+    
+    if (!product) {
+        alert('Товар не найден. ID: ' + editId);
+        window.location.href = 'index.html';
+        return;
+    }
+    
+    // Заполняем форму
     document.getElementById('productId').value = product.id;
     document.getElementById('name').value = product.name || '';
     document.getElementById('price').value = product.price || '';
     document.getElementById('description').value = product.description || '';
     document.getElementById('image').value = product.image || '';
     
-    // Показываем превью изображения
+    // Превью изображения
     const imagePreview = document.getElementById('imagePreview');
     if (product.image && product.image !== 'https://via.placeholder.com/200x150?text=No+Image') {
         imagePreview.src = product.image;
         imagePreview.style.display = 'block';
-    } else {
-        imagePreview.style.display = 'none';
-    }
-}
-
-// Обновляем превью изображения
-document.getElementById('image').addEventListener('input', function(e) {
-    const imagePreview = document.getElementById('imagePreview');
-    if (e.target.value.trim()) {
-        imagePreview.src = e.target.value;
-        imagePreview.style.display = 'block';
-    } else {
-        imagePreview.style.display = 'none';
     }
 });
 
 // Обработка отправки формы
-document.getElementById('editProductForm').addEventListener('submit', async function(e) {
+document.getElementById('editProductForm').addEventListener('submit', function(e) {
     e.preventDefault();
     
-    const products = await getProducts();
     const productId = parseInt(document.getElementById('productId').value);
+    let products = JSON.parse(localStorage.getItem('products')) || [];
     
-    // Находим индекс товара
+    // Находим индекс
     const index = products.findIndex(p => p.id === productId);
     
     if (index === -1) {
-        alert('Товар не найден. Возможно, он был удален.');
-        window.location.href = 'index.html';
+        alert('Товар не найден');
         return;
     }
     
-    // Обновляем данные товара
+    // Обновляем товар
     products[index] = {
         id: productId,
         name: document.getElementById('name').value.trim(),
@@ -99,26 +60,34 @@ document.getElementById('editProductForm').addEventListener('submit', async func
         image: document.getElementById('image').value.trim() || 'https://via.placeholder.com/200x150?text=No+Image'
     };
     
-    await saveProducts(products);
+    // Сохраняем
+    localStorage.setItem('products', JSON.stringify(products));
+    
     alert('Товар успешно обновлен!');
     window.location.href = 'index.html';
 });
 
 // Удаление товара
-async function deleteProduct() {
-    if (!confirm('Вы уверены, что хотите удалить этот товар?')) {
+function deleteProduct() {
+    if (!confirm('Удалить этот товар?')) {
         return;
     }
     
-    const products = await getProducts();
     const productId = parseInt(document.getElementById('productId').value);
+    let products = JSON.parse(localStorage.getItem('products')) || [];
     
-    const updatedProducts = products.filter(p => p.id !== productId);
-    await saveProducts(updatedProducts);
+    products = products.filter(p => p.id !== productId);
+    localStorage.setItem('products', JSON.stringify(products));
     
     alert('Товар удален!');
     window.location.href = 'index.html';
 }
 
-// Инициализация
-window.addEventListener('DOMContentLoaded', loadProductData);
+// Превью изображения
+document.getElementById('image').addEventListener('input', function(e) {
+    const imagePreview = document.getElementById('imagePreview');
+    if (e.target.value.trim()) {
+        imagePreview.src = e.target.value;
+        imagePreview.style.display = 'block';
+    }
+});
