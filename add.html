@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Добавить товар</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .form-container {
+            max-width: 500px;
+            margin: 30px auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        
+        textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .btn-save {
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        .btn-cancel {
+            background-color: #f44336;
+            color: white;
+        }
+        
+        .btn-back {
+            background-color: #2196F3;
+            color: white;
+        }
+        
+        .image-preview {
+            margin-top: 10px;
+        }
+        
+        .image-preview img {
+            max-width: 200px;
+            max-height: 150px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h1>➕ Добавить новый товар</h1>
+        
+        <form id="addProductForm">
+            <div class="form-group">
+                <label for="name">Название товара:</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="price">Цена (руб.):</label>
+                <input type="number" id="price" name="price" min="0" step="0.01" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="description">Описание:</label>
+                <textarea id="description" name="description" required></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="image">URL изображения (необязательно):</label>
+                <input type="url" id="image" name="image" placeholder="https://example.com/image.jpg">
+                <div class="image-preview">
+                    <img id="imagePreview" src="" alt="Предпросмотр" style="display: none;">
+                </div>
+            </div>
+            
+            <div class="button-group">
+                <button type="submit" class="btn-save">💾 Сохранить товар</button>
+                <button type="button" class="btn-cancel" onclick="cancelAdd()">❌ Отмена</button>
+            </div>
+        </form>
+        
+        <div style="margin-top: 20px;">
+            <button class="btn-back" onclick="goBack()">← Вернуться в каталог</button>
+        </div>
+    </div>
+
+    <script>
+        // Обработка отправки формы
+        document.getElementById('addProductForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Загружаем текущие товары
+            let products = JSON.parse(localStorage.getItem('products')) || [];
+            
+            // Создаем новый товар
+            const newProduct = {
+                id: Date.now() + Math.floor(Math.random() * 1000),
+                name: document.getElementById('name').value.trim(),
+                price: parseFloat(document.getElementById('price').value),
+                description: document.getElementById('description').value.trim(),
+                image: document.getElementById('image').value.trim() || 'https://via.placeholder.com/200x150?text=No+Image'
+            };
+            
+            // Проверка данных
+            if (!newProduct.name || !newProduct.description || isNaN(newProduct.price)) {
+                alert('Пожалуйста, заполните все обязательные поля корректно');
+                return;
+            }
+            
+            // Добавляем товар
+            products.push(newProduct);
+            
+            // Сохраняем в localStorage
+            localStorage.setItem('products', JSON.stringify(products));
+            
+            // Показываем успех и переходим
+            alert('✅ Товар успешно добавлен!');
+            window.location.href = 'index.html';
+        });
+        
+        // Превью изображения при вводе URL
+        document.getElementById('image').addEventListener('input', function(e) {
+            const preview = document.getElementById('imagePreview');
+            if (e.target.value.trim()) {
+                preview.src = e.target.value;
+                preview.style.display = 'block';
+            } else {
+                preview.style.display = 'none';
+            }
+        });
+        
+        // Остальные функции
+        function cancelAdd() {
+            if (confirm('Отменить добавление товара?')) {
+                window.location.href = 'index.html';
+            }
+        }
+        
+        function goBack() {
+            window.location.href = 'index.html';
+        }
+        
+        // Автофокус на первое поле
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('name').focus();
+        });
+    </script>
+</body>
+</html>
