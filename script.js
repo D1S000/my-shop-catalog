@@ -38,5 +38,15 @@ function editProduct(id) {
   window.location.href = 'edit.html';
 }
 
+// Функции для перехода к формам
+function addProduct() {
+    window.location.href = 'add.html';
+}
+
+function editProduct(id) {
+    localStorage.setItem('editId', id);
+    window.location.href = 'edit.html';
+}
+
 // Инициализация
 renderCatalog();
