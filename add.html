@@ -1,71 +1,43 @@
-// Получаем текущие товары
-async function getProducts() {
-    try {
-        const response = await fetch('products.json');
-        const jsonProducts = await response.json();
-        const localProducts = localStorage.getItem('products');
-        
-        // Объединяем данные из JSON и localStorage
-        if (localProducts) {
-            const local = JSON.parse(localProducts);
-            // Создаем мап для избежания дубликатов
-            const productMap = new Map();
-            
-            // Сначала добавляем из JSON
-            jsonProducts.forEach(p => productMap.set(p.id, p));
-            // Затем из localStorage (перезаписываем если есть)
-            local.forEach(p => productMap.set(p.id, p));
-            
-            return Array.from(productMap.values());
-        }
-        
-        return jsonProducts;
-    } catch (error) {
-        console.error('Ошибка загрузки товаров:', error);
-        // Пробуем загрузить только из localStorage
-        const localProducts = localStorage.getItem('products');
-        return localProducts ? JSON.parse(localProducts) : [];
-    }
-}
-
-// Сохраняем товары
-async function saveProducts(products) {
-    // Сохраняем в localStorage
-    localStorage.setItem('products', JSON.stringify(products));
-}
-
-// Генерируем уникальный ID
-function generateId() {
-    return Date.now() + Math.floor(Math.random() * 1000);
-}
-
 // Обработка отправки формы
-document.getElementById('addProductForm').addEventListener('submit', async function(e) {
+document.getElementById('addProductForm').addEventListener('submit', function(e) {
     e.preventDefault();
     
-    const products = await getProducts();
+    // Загружаем текущие товары
+    let products = JSON.parse(localStorage.getItem('products')) || [];
     
+    // Создаем новый товар
     const newProduct = {
-        id: generateId(),
+        id: Date.now() + Math.floor(Math.random() * 1000),
         name: document.getElementById('name').value.trim(),
         price: parseFloat(document.getElementById('price').value),
         description: document.getElementById('description').value.trim(),
         image: document.getElementById('image').value.trim() || 'https://via.placeholder.com/200x150?text=No+Image'
     };
     
-    // Проверяем, все ли поля заполнены
+    // Проверка данных
     if (!newProduct.name || !newProduct.description || isNaN(newProduct.price)) {
         alert('Пожалуйста, заполните все обязательные поля корректно');
         return;
     }
     
-    // Добавляем новый товар
+    // Добавляем товар
     products.push(newProduct);
-    await saveProducts(products);
     
-    // Показываем сообщение об успехе
+    // Сохраняем в localStorage
+    localStorage.setItem('products', JSON.stringify(products));
+    
+    // Показываем успех и переходим
     alert('Товар успешно добавлен!');
-    
-    // Возвращаемся в каталог
     window.location.href = 'index.html';
 });
+
+// Остальные функции остаются прежними
+function cancelAdd() {
+    if (confirm('Отменить добавление товара?')) {
+        window.location.href = 'index.html';
+    }
+}
+
+function goBack() {
+    window.location.href = 'index.html';
+}
