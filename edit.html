@@ -1,246 +1,124 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Редактировать товар</title>
-    <link rel="stylesheet" href="style.css">
-    <style>
-        .form-container {
-            max-width: 500px;
-            margin: 30px auto;
-            padding: 20px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            background-color: #f9f9f9;
-        }
-        
-        .form-group {
-            margin-bottom: 15px;
-        }
-        
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        
-        input, textarea {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        
-        textarea {
-            height: 100px;
-            resize: vertical;
-        }
-        
-        .button-group {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-        }
-        
-        button {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        
-        .btn-save {
-            background-color: #4CAF50;
-            color: white;
-        }
-        
-        .btn-delete {
-            background-color: #f44336;
-            color: white;
-        }
-        
-        .btn-cancel {
-            background-color: #ff9800;
-            color: white;
-        }
-        
-        .btn-back {
-            background-color: #2196F3;
-            color: white;
-        }
-        
-        .product-preview {
-            max-width: 200px;
-            margin: 10px 0;
-        }
-        
-        .product-preview img {
-            max-width: 100%;
-            height: auto;
-            border-radius: 4px;
-        }
-    </style>
-</head>
-<body>
-    <div class="form-container">
-        <h1>Редактировать товар</h1>
-        
-        <form id="editProductForm">
-            <input type="hidden" id="productId">
-            
-            <div class="form-group">
-                <label for="name">Название товара:</label>
-                <input type="text" id="name" name="name" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="price">Цена (руб.):</label>
-                <input type="number" id="price" name="price" min="0" step="0.01" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="description">Описание:</label>
-                <textarea id="description" name="description" required></textarea>
-            </div>
-            
-            <div class="form-group">
-                <label for="image">URL изображения:</label>
-                <input type="url" id="image" name="image" placeholder="https://example.com/image.jpg">
-                <div class="product-preview">
-                    <img id="imagePreview" src="" alt="Предпросмотр">
-                </div>
-            </div>
-            
-            <div class="button-group">
-                <button type="submit" class="btn-save">Сохранить изменения</button>
-                <button type="button" class="btn-delete" onclick="deleteProduct()">Удалить товар</button>
-                <button type="button" class="btn-cancel" onclick="cancelEdit()">Отмена</button>
-            </div>
-        </form>
-        
-        <div style="margin-top: 20px;">
-            <button class="btn-back" onclick="goBack()">← Вернуться в каталог</button>
-        </div>
-    </div>
+// Получаем ID товара для редактирования
+const editId = localStorage.getItem('editId');
 
-    <script>
-        // Получаем ID товара для редактирования
-        const editId = localStorage.getItem('editId');
+if (!editId) {
+    alert('Товар не выбран для редактирования');
+    window.location.href = 'index.html';
+}
+
+// Загружаем товары
+async function getProducts() {
+    try {
+        const localProducts = localStorage.getItem('products');
         
-        if (!editId) {
-            alert('Товар не выбран для редактирования');
-            window.location.href = 'index.html';
+        if (localProducts) {
+            return JSON.parse(localProducts);
+        } else {
+            // Если нет в localStorage, загружаем из JSON
+            const response = await fetch('products.json');
+            return await response.json();
         }
-        
-        // Получаем товары из localStorage
-        function getProducts() {
-            const products = localStorage.getItem('products');
-            return products ? JSON.parse(products) : [];
-        }
-        
-        // Сохраняем товары в localStorage
-        function saveProducts(products) {
-            localStorage.setItem('products', JSON.stringify(products));
-        }
-        
-        // Загружаем данные товара для редактирования
-        function loadProductData() {
-            const products = getProducts();
-            const product = products.find(p => p.id == editId);
-            
-            if (!product) {
-                alert('Товар не найден');
-                window.location.href = 'index.html';
-                return;
-            }
-            
-            // Заполняем форму данными товара
-            document.getElementById('productId').value = product.id;
-            document.getElementById('name').value = product.name || '';
-            document.getElementById('price').value = product.price || '';
-            document.getElementById('description').value = product.description || '';
-            document.getElementById('image').value = product.image || '';
-            
-            // Показываем превью изображения
-            const imagePreview = document.getElementById('imagePreview');
-            if (product.image) {
-                imagePreview.src = product.image;
-                imagePreview.style.display = 'block';
-            } else {
-                imagePreview.style.display = 'none';
-            }
-        }
-        
-        // Обновляем превью изображения при изменении URL
-        document.getElementById('image').addEventListener('input', function(e) {
-            const imagePreview = document.getElementById('imagePreview');
-            if (e.target.value) {
-                imagePreview.src = e.target.value;
-                imagePreview.style.display = 'block';
-            } else {
-                imagePreview.style.display = 'none';
-            }
-        });
-        
-        // Обработка отправки формы
-        document.getElementById('editProductForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const products = getProducts();
-            const productId = parseInt(document.getElementById('productId').value);
-            
-            // Находим индекс товара
-            const index = products.findIndex(p => p.id == productId);
-            
-            if (index === -1) {
-                alert('Товар не найден');
-                return;
-            }
-            
-            // Обновляем данные товара
-            products[index] = {
-                id: productId,
-                name: document.getElementById('name').value,
-                price: parseFloat(document.getElementById('price').value),
-                description: document.getElementById('description').value,
-                image: document.getElementById('image').value || 'https://via.placeholder.com/200x150?text=No+Image'
-            };
-            
-            saveProducts(products);
-            alert('Товар успешно обновлен!');
-            window.location.href = 'index.html';
-        });
-        
-        // Удаление товара
-        function deleteProduct() {
-            if (confirm('Вы уверены, что хотите удалить этот товар?')) {
-                const products = getProducts();
-                const productId = parseInt(document.getElementById('productId').value);
-                
-                // Фильтруем массив, удаляя товар
-                const updatedProducts = products.filter(p => p.id != productId);
-                saveProducts(updatedProducts);
-                
-                alert('Товар удален!');
-                window.location.href = 'index.html';
-            }
-        }
-        
-        function cancelEdit() {
-            if (confirm('Отменить редактирование? Несохраненные изменения будут потеряны.')) {
-                window.location.href = 'index.html';
-            }
-        }
-        
-        function goBack() {
-            window.location.href = 'index.html';
-        }
-        
-        // Загружаем данные при загрузке страницы
-        window.addEventListener('DOMContentLoaded', loadProductData);
-    </script>
-</body>
-</html>
+    } catch (error) {
+        console.error('Ошибка загрузки товаров:', error);
+        return [];
+    }
+}
+
+// Сохраняем товары
+async function saveProducts(products) {
+    localStorage.setItem('products', JSON.stringify(products));
+}
+
+// Загружаем данные товара для редактирования
+async function loadProductData() {
+    const products = await getProducts();
+    
+    // Преобразуем editId в число для сравнения
+    const productId = parseInt(editId);
+    const product = products.find(p => p.id === productId);
+    
+    console.log('Ищем товар с ID:', productId);
+    console.log('Все товары:', products);
+    
+    if (!product) {
+        alert('Товар не найден. ID: ' + productId);
+        window.location.href = 'index.html';
+        return;
+    }
+    
+    // Заполняем форму данными товара
+    document.getElementById('productId').value = product.id;
+    document.getElementById('name').value = product.name || '';
+    document.getElementById('price').value = product.price || '';
+    document.getElementById('description').value = product.description || '';
+    document.getElementById('image').value = product.image || '';
+    
+    // Показываем превью изображения
+    const imagePreview = document.getElementById('imagePreview');
+    if (product.image && product.image !== 'https://via.placeholder.com/200x150?text=No+Image') {
+        imagePreview.src = product.image;
+        imagePreview.style.display = 'block';
+    } else {
+        imagePreview.style.display = 'none';
+    }
+}
+
+// Обновляем превью изображения
+document.getElementById('image').addEventListener('input', function(e) {
+    const imagePreview = document.getElementById('imagePreview');
+    if (e.target.value.trim()) {
+        imagePreview.src = e.target.value;
+        imagePreview.style.display = 'block';
+    } else {
+        imagePreview.style.display = 'none';
+    }
+});
+
+// Обработка отправки формы
+document.getElementById('editProductForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const products = await getProducts();
+    const productId = parseInt(document.getElementById('productId').value);
+    
+    // Находим индекс товара
+    const index = products.findIndex(p => p.id === productId);
+    
+    if (index === -1) {
+        alert('Товар не найден. Возможно, он был удален.');
+        window.location.href = 'index.html';
+        return;
+    }
+    
+    // Обновляем данные товара
+    products[index] = {
+        id: productId,
+        name: document.getElementById('name').value.trim(),
+        price: parseFloat(document.getElementById('price').value),
+        description: document.getElementById('description').value.trim(),
+        image: document.getElementById('image').value.trim() || 'https://via.placeholder.com/200x150?text=No+Image'
+    };
+    
+    await saveProducts(products);
+    alert('Товар успешно обновлен!');
+    window.location.href = 'index.html';
+});
+
+// Удаление товара
+async function deleteProduct() {
+    if (!confirm('Вы уверены, что хотите удалить этот товар?')) {
+        return;
+    }
+    
+    const products = await getProducts();
+    const productId = parseInt(document.getElementById('productId').value);
+    
+    const updatedProducts = products.filter(p => p.id !== productId);
+    await saveProducts(updatedProducts);
+    
+    alert('Товар удален!');
+    window.location.href = 'index.html';
+}
+
+// Инициализация
+window.addEventListener('DOMContentLoaded', loadProductData);
